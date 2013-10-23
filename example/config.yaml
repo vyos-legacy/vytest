@@ -1,0 +1,10 @@
+data: config.boot
+
+setup: setup.sh
+
+teardown: teardown.sh
+
+scripts:
+  - script1.sh
+  - script2.sh
+
