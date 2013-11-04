@@ -68,6 +68,9 @@ class Test(object):
         if not isinstance(self.__config['data'], list):
             self.__config['data'] = [ self.__config['data'] ]
 
+        if not self.__config.has_key('testsuite'):
+            self.__config['testsuite'] = self.__path
+
     def __mkdir_if_needed(self, sftp_client, name):
         try:
             st = sftp_client.stat(name)
@@ -80,6 +83,7 @@ class Test(object):
                 sftp_client.mkdir(name)
 
     def run(self):
+        testsuite = self.__config['testsuite']
         test_dir = self.__path.split(os.path.sep).pop()
         vytest_dir = self.__vytest_dir
         scripts = self.__config['scripts']
@@ -130,7 +134,7 @@ class Test(object):
             print "Running setup script: %s" % setup
             try:
                 ssh = t.open_session()
-                ssh.exec_command( posixpath.join(vytest_dir, test_dir, setup)  )
+                ssh.exec_command( "%s >> %s" % (posixpath.join(vytest_dir, test_dir, setup), posixpath.join(vytest_dir, test_dir, testsuite + '.log'))   )
             except IOError, e:
                 raise VyTestError(e.strerror)
 
@@ -140,13 +144,13 @@ class Test(object):
             for script in scripts:
                 print "    %s" % script
                 ssh = t.open_session()
-                ssh.exec_command( posixpath.join(vytest_dir, test_dir, script) )
+                ssh.exec_command( "%s >> %s" % (posixpath.join(vytest_dir, test_dir, script), posixpath.join(vytest_dir, test_dir, testsuite + '.log')) )
 
         # Execute teardown in the end
         if teardown:
             print "Running teardown script: %s" % teardown
             ssh = t.open_session()
-            ssh.exec_command( posixpath.join(vytest_dir, test_dir, teardown) )
+            ssh.exec_command( "%s >> %s" % (posixpath.join(vytest_dir, test_dir, teardown), posixpath.join(vytest_dir, test_dir, testsuite + '.log')) )
 
         t.close()
 
